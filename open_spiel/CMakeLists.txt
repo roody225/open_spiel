@@ -18,7 +18,7 @@ if(APPLE)
   # has a virtual environment active
   set (CMAKE_FIND_FRAMEWORK LAST)
 else()
-  set (CMAKE_CXX_FLAGS "-Wno-everything")
+  set (CMAKE_CXX_FLAGS "-Wno-everything -O3")
 endif()
 
 # Position-independent code is needed for Python extension modules.

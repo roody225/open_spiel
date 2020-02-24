@@ -178,15 +178,24 @@ void Rbg2OpenSState::ObservationTensor(Player player,
   }
 }
 */
-/*
 void Rbg2OpenSState::UndoAction(Player player, Action move) {
-  board_[move] = CellState::kEmpty;
-  current_player_ = player;
-  outcome_ = kInvalidPlayer;
-  num_moves_ -= 1;
-  history_.pop_back();
+  if(history_.size()>0){
+    rbg_state = rbg_game::game_state();
+    rbg_cache = rbg_game::resettable_bitarray_stack();
+    isLegalMovesProcessed = false;
+    while(CurrentPlayer() == KEEPER){
+      if(!rbg_state.apply_any_move(rbg_cache)){
+        break;
+      }
+    }
+    history_.pop_back();
+    num_moves_ -= 1;
+    for(auto& ac : history_){
+      ApplyAction(ac);
+    }
+  }
 }
-*/
+
 std::unique_ptr<State> Rbg2OpenSState::Clone() const {
   return std::unique_ptr<State>(new Rbg2OpenSState(*this));
 }
