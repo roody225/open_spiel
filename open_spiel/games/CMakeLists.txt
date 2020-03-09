@@ -84,6 +84,10 @@ set(GAME_SOURCES
   tiny_bridge.h
   tiny_hanabi.cc
   tiny_hanabi.h
+  rbg2openS.h
+  rbg2openS.cc
+  rbg_game.hpp
+  rbg_game.cpp
   y.cc
   y.h
 )
@@ -330,6 +334,10 @@ add_executable(tiny_hanabi_test tiny_hanabi_test.cc ${OPEN_SPIEL_OBJECTS}
                $<TARGET_OBJECTS:tests>
                $<TARGET_OBJECTS:algorithms>)
 add_test(tiny_hanabi_test tiny_hanabi_test)
+
+add_executable(rbg2opens_test rbg2openS_test.cc ${OPEN_SPIEL_OBJECTS}
+               $<TARGET_OBJECTS:tests>)
+add_test(rbg2opens_test rbg2opens_test)
 
 if (${BUILD_WITH_ACPC})
   add_executable(universal_poker_test universal_poker_test.cc ${OPEN_SPIEL_OBJECTS}
