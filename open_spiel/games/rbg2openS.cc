@@ -68,15 +68,10 @@ rbg_game::action_representation opens2rbgAction(Action action_id) {
 }
 
 void Rbg2OpenSState::DoApplyAction(Action move) {
-  rbg_game::action_representation tmpAc = opens2rbgAction(move);
-  rbg_state.get_all_semimoves(rbg_cache, rbg_moves, 1);
-  for(auto& el: rbg_moves){
-    if(tmpAc == el.get_actions()[0]){
-      rbg_state.apply_semimove(el);
-      num_moves_ += 1;
-      break;
-    }
-  }
+  
+  rbg_state.apply_semimove(moves_map[move]);
+  num_moves_ += 1;
+  
   isLegalMovesProcessed = false;
   while(CurrentPlayer() == KEEPER){
     if(!rbg_state.apply_any_move(rbg_cache)){
@@ -96,10 +91,12 @@ std::vector<Action> Rbg2OpenSState::LegalActions() const {
   std::vector<rbg_game::semimove> tmp;
   rbg_state.get_all_semimoves(rbg_cache, rbg_moves, 1);
   for(auto& el: rbg_moves){
+    Action act = rbg2opensAction(el.get_actions()[0]);
+    moves_map[act] = rbg_game::semimove(el);
     rbg_game::revert_information ri = rbg_state.apply_semimove_with_revert(el);
     rbg_state.get_all_semimoves(rbg_cache, tmp, big_number);
     if(!tmp.empty()){
-      legal_moves.push_back(rbg2opensAction(el.get_actions()[0]));
+      legal_moves.push_back(act);
     }
     rbg_state.revert(ri);
   }
@@ -114,6 +111,8 @@ std::string Rbg2OpenSState::ActionToString(Player player,
 }
 
 Rbg2OpenSState::Rbg2OpenSState(std::shared_ptr<const Game> game) : State(game) {
+  moves_map.resize(NUMBER_OF_POSSIBLE_MOVES, rbg_game::semimove({}, 0, 0));
+  
   while(CurrentPlayer() == KEEPER){
     if(!rbg_state.apply_any_move(rbg_cache)){
       break;
@@ -126,6 +125,7 @@ Player Rbg2OpenSState::CurrentPlayer() const {
 }
 
 std::string Rbg2OpenSState::ToString() const {
+  return "";
   std::string res="";
   res += "BOARD:\n";
   for(int i=0; i<rbg_game::BOARD_SIZE; i++){
@@ -141,7 +141,7 @@ std::string Rbg2OpenSState::ToString() const {
     res += ", ";
   }
   res+="\n";
-  return res;
+  //return res;
 }
 
 bool Rbg2OpenSState::IsTerminal() const {

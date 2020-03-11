@@ -83,6 +83,8 @@ class Rbg2OpenSState : public State {
   mutable std::vector<rbg_game::semimove> rbg_moves;
   mutable std::vector<Action> legal_moves;
   mutable bool isLegalMovesProcessed = false;
+  int NUMBER_OF_POSSIBLE_MOVES = rbg_game::BOARD_SIZE * rbg_game::NUMBER_OF_MODIFIERS;
+  mutable std::vector<rbg_game::semimove> moves_map;
   const int KEEPER = 0;
   int num_moves_ = 0;
 };
@@ -96,8 +98,8 @@ class Rbg2OpenSGame : public Game {
     return std::unique_ptr<State>(new Rbg2OpenSState(shared_from_this()));
   }
   int NumPlayers() const override { return rbg_game::NUMBER_OF_PLAYERS - 1; }
-  double MinUtility() const override { return 0; }
-  double MaxUtility() const override { return 100; }
+  double MinUtility() const override { return INT_MIN; }
+  double MaxUtility() const override { return INT_MAX; }
   std::shared_ptr<const Game> Clone() const override {
     return std::shared_ptr<const Game>(new Rbg2OpenSGame(*this));
   }
