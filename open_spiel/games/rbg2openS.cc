@@ -125,7 +125,6 @@ Player Rbg2OpenSState::CurrentPlayer() const {
 }
 
 std::string Rbg2OpenSState::ToString() const {
-  return "";
   std::string res="";
   res += "BOARD:\n";
   for(int i=0; i<rbg_game::BOARD_SIZE; i++){
@@ -141,7 +140,7 @@ std::string Rbg2OpenSState::ToString() const {
     res += ", ";
   }
   res+="\n";
-  //return res;
+  return res;
 }
 
 bool Rbg2OpenSState::IsTerminal() const {
