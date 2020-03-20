@@ -39,10 +39,8 @@ inline constexpr int kNumRows = 3;
 inline constexpr int kNumCols = 3;
 inline constexpr int kNumCells = kNumRows * kNumCols;
 inline constexpr int kCellStates = 1 + kNumPlayers;  // empty, 'x', and 'o'.
-
 // https://math.stackexchange.com/questions/485752/tictactoe-state-space-choose-calculation/485852
 inline constexpr int kNumberStates = 5478;
-
 // State of a cell.
 enum class CellState {
   kEmpty,

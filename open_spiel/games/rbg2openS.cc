@@ -73,7 +73,7 @@ void Rbg2OpenSState::DoApplyAction(Action move) {
   num_moves_ += 1;
   
   isLegalMovesProcessed = false;
-  while(CurrentPlayer() == KEEPER){
+  while(rbg_state.get_current_player() == KEEPER){
     if(!rbg_state.apply_any_move(rbg_cache)){
       legal_moves.clear();
       isLegalMovesProcessed = true;
@@ -113,7 +113,7 @@ std::string Rbg2OpenSState::ActionToString(Player player,
 Rbg2OpenSState::Rbg2OpenSState(std::shared_ptr<const Game> game) : State(game) {
   moves_map.resize(NUMBER_OF_POSSIBLE_MOVES, rbg_game::semimove({}, 0, 0));
   
-  while(CurrentPlayer() == KEEPER){
+  while(rbg_state.get_current_player() == KEEPER){
     if(!rbg_state.apply_any_move(rbg_cache)){
       break;
     }
@@ -169,7 +169,6 @@ void Rbg2OpenSState::ObservationTensor(Player player,
                                        std::vector<double>* values) const {
   SPIEL_CHECK_GE(player, 0);
   SPIEL_CHECK_LT(player, num_players_);
-
   // Treat `values` as a 2-d tensor.
   TensorView<2> view(values, {kCellStates, kNumCells}, true);
   for (int cell = 0; cell < kNumCells; ++cell) {
