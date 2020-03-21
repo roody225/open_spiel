@@ -110,6 +110,7 @@ std::string Rbg2OpenSState::ActionToString(Player player,
 }
 
 std::vector<rbg_game::semimove> Rbg2OpenSState::moves_map;
+rbg_game::resettable_bitarray_stack Rbg2OpenSState::rbg_cache = rbg_game::resettable_bitarray_stack();
 
 Rbg2OpenSState::Rbg2OpenSState(std::shared_ptr<const Game> game) : State(game) {
   moves_map.resize(NUMBER_OF_POSSIBLE_MOVES, rbg_game::semimove({}, 0, 0));

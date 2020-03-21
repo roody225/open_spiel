@@ -77,7 +77,7 @@ class Rbg2OpenSState : public State {
 
  private:
   mutable rbg_game::game_state rbg_state = rbg_game::game_state();
-  mutable rbg_game::resettable_bitarray_stack rbg_cache = rbg_game::resettable_bitarray_stack();
+  static rbg_game::resettable_bitarray_stack rbg_cache;
   mutable std::vector<rbg_game::semimove> rbg_moves;
   mutable std::vector<Action> legal_moves;
   mutable bool isLegalMovesProcessed = false;
