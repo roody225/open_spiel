@@ -83,6 +83,7 @@ class Rbg2OpenSState : public State {
   mutable bool isLegalMovesProcessed = false;
   int NUMBER_OF_POSSIBLE_MOVES = rbg_game::BOARD_SIZE * rbg_game::NUMBER_OF_MODIFIERS;
   static std::vector<rbg_game::semimove> moves_map;
+  mutable std::vector<rbg_game::semimove> tmp;
   const int KEEPER = 0;
   int num_moves_ = 0;
 };
@@ -108,4 +109,3 @@ class Rbg2OpenSGame : public Game {
 }  // namespace open_spiel
 
 #endif  // THIRD_PARTY_OPEN_SPIEL_GAMES_RBG2OPENS_H_
-

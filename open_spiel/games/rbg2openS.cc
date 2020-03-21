@@ -88,7 +88,6 @@ std::vector<Action> Rbg2OpenSState::LegalActions() const {
   }
   unsigned int big_number = 999;
   legal_moves.clear();
-  std::vector<rbg_game::semimove> tmp;
   rbg_state.get_all_semimoves(rbg_cache, rbg_moves, 1);
   for(auto& el: rbg_moves){
     Action act = rbg2opensAction(el.get_actions()[0]);
@@ -113,9 +112,7 @@ std::string Rbg2OpenSState::ActionToString(Player player,
 std::vector<rbg_game::semimove> Rbg2OpenSState::moves_map;
 
 Rbg2OpenSState::Rbg2OpenSState(std::shared_ptr<const Game> game) : State(game) {
-  rbg_game::semimove empty = rbg_game::semimove({}, 0, 0);
-  if(moves_map.size()==0)
-    moves_map.resize(NUMBER_OF_POSSIBLE_MOVES, empty);
+  moves_map.resize(NUMBER_OF_POSSIBLE_MOVES, rbg_game::semimove({}, 0, 0));
   
   while(rbg_state.get_current_player() == KEEPER){
     if(!rbg_state.apply_any_move(rbg_cache)){
