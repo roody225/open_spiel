@@ -84,6 +84,7 @@ set(GAME_SOURCES
   tiny_bridge.h
   tiny_hanabi.cc
   tiny_hanabi.h
+  kxsort.h
   rbg2openS.h
   rbg2openS.cc
   rbg_game.hpp

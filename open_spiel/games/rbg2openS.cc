@@ -68,8 +68,9 @@ rbg_game::action_representation opens2rbgAction(Action action_id) {
 }
 
 void Rbg2OpenSState::DoApplyAction(Action move) {
-  
-  rbg_state.apply_semimove(moves_map[move]);
+  for(auto& ac: moves_map[move]){
+    rbg_state.apply_semimove(ac);
+  }
   num_moves_ += 1;
   
   isLegalMovesProcessed = false;
@@ -82,25 +83,69 @@ void Rbg2OpenSState::DoApplyAction(Action move) {
   }
 }
 
-std::vector<Action> Rbg2OpenSState::LegalActions() const {
-  if(isLegalMovesProcessed){
-    return legal_moves;
-  }
-  unsigned int big_number = 999;
-  legal_moves.clear();
-  rbg_state.get_all_semimoves(rbg_cache, rbg_moves, 1);
-  for(auto& el: rbg_moves){
-    Action act = rbg2opensAction(el.get_actions()[0]);
-    moves_map[act] = rbg_game::semimove(el);
-    rbg_game::revert_information ri = rbg_state.apply_semimove_with_revert(el);
-    rbg_state.get_all_semimoves(rbg_cache, tmp, big_number);
-    if(!tmp.empty()){
-      legal_moves.push_back(act);
+void Rbg2OpenSState::gen_all_moves(int act, int nr, int plr, std::vector<Action>& legal_moves, std::vector<rbg_game::semimove>& acc) const{
+  if(plr != rbg_state.get_current_player()){
+    if(moves_map[act].empty()){
+      for(auto& el: acc){
+        moves_map[act].push_back(el);
+      }
     }
+    legal_moves.push_back(act);
+    return;
+  }
+  if(nr == SEMIMOVES_IN_MOVE){
+    std::vector<rbg_game::semimove> tmp;
+    rbg_state.get_all_semimoves(rbg_cache, tmp, 999);
+    if(!tmp.empty()){
+      if(moves_map[act].empty()){
+        moves_map[act] = acc;
+      }
+      legal_moves.push_back(act);
+      return;
+    }
+  }
+  rbg_state.get_all_semimoves(rbg_cache, semitmp[nr], 1);
+  for(auto& el: semitmp[nr]){
+    Action ac = rbg2opensAction(el.get_actions()[0]);
+    ac = (ac<<(nr * MAX_ACTION_SIZE)) + act + 1;
+    rbg_game::revert_information ri = rbg_state.apply_semimove_with_revert(el);
+    acc.push_back(el);
+    gen_all_moves(act+ac, nr+1, plr, legal_moves, acc);
+    acc.pop_back();
     rbg_state.revert(ri);
   }
+}
+/*
+void Rbg2OpenSState::calculate_legal_moves() const{
+  rbg_state.get_all_semimoves(rbg_cache, tmp0, 1);
+  for(auto& el: tmp0){
+    rbg_game::revert_information ri = rbg_state.apply_semimove_with_revert(el);
+    rbg_state.get_all_semimoves(rbg_cache, tmp1, 1);
+      for(auto& e: tmp1){
+        rbg_game::revert_information rii = rbg_state.apply_semimove_with_revert(e);
+        Action act = (rbg2opensAction(e.get_actions()[0]) << MAX_ACTION_SIZE) + rbg2opensAction(el.get_actions()[0]) + 1;
+        legal_moves.push_back(act);
+        if(moves_map[act].empty()){
+          moves_map[act].push_back(el);
+          moves_map[act].push_back(e);
+        }
+        rbg_state.revert(rii);
+        }
+      rbg_state.revert(ri);
+    }
   sort(legal_moves.begin(), legal_moves.end());
   isLegalMovesProcessed = true;
+}
+*/
+
+std::vector<Action> Rbg2OpenSState::LegalActions() const {
+  if(!isLegalMovesProcessed){
+    legal_moves.clear();
+    //calculate_legal_moves();
+    gen_all_moves(0, 0, rbg_state.get_current_player(), legal_moves, acc);
+    kx::radix_sort(legal_moves.begin(), legal_moves.end());
+    isLegalMovesProcessed = true;
+  }
   return legal_moves;
 }
 
@@ -109,12 +154,27 @@ std::string Rbg2OpenSState::ActionToString(Player player,
   return std::to_string(player) + " " +std::to_string(action_id);
 }
 
-std::vector<rbg_game::semimove> Rbg2OpenSState::moves_map;
+int calculate_action_size(){
+  int x = rbg_game::BOARD_SIZE * rbg_game::NUMBER_OF_MODIFIERS + 1;
+  int s = 0;
+  while(x){
+    s++;
+    x = (x >> 1);
+  }
+  return s;
+}
+const int Rbg2OpenSState::MAX_ACTION_SIZE = calculate_action_size();
+const int Rbg2OpenSState::SEMIMOVES_IN_MOVE = std::max(1, 22/MAX_ACTION_SIZE);
+std::vector<std::vector<rbg_game::semimove>> Rbg2OpenSState::moves_map;
 rbg_game::resettable_bitarray_stack Rbg2OpenSState::rbg_cache = rbg_game::resettable_bitarray_stack();
+std::vector<std::vector<rbg_game::semimove>> Rbg2OpenSState::semitmp;
 
 Rbg2OpenSState::Rbg2OpenSState(std::shared_ptr<const Game> game) : State(game) {
-  moves_map.resize(NUMBER_OF_POSSIBLE_MOVES, rbg_game::semimove({}, 0, 0));
-  
+  if(semitmp.size()==0)
+    semitmp.resize(SEMIMOVES_IN_MOVE);
+  if(moves_map.size()==0){
+    moves_map.resize(std::max(NUMBER_OF_POSSIBLE_ACTIONS+1, (NUMBER_OF_POSSIBLE_ACTIONS<<(MAX_ACTION_SIZE * (SEMIMOVES_IN_MOVE-1))) + NUMBER_OF_POSSIBLE_ACTIONS+1));
+  }
   while(rbg_state.get_current_player() == KEEPER){
     if(!rbg_state.apply_any_move(rbg_cache)){
       break;
@@ -146,7 +206,15 @@ std::string Rbg2OpenSState::ToString() const {
 }
 
 bool Rbg2OpenSState::IsTerminal() const {
-  return LegalActions().empty();
+  if(!isLegalMovesProcessed){
+    legal_moves.clear();
+    //calculate_legal_moves();
+    std::vector<rbg_game::semimove> acc;
+    gen_all_moves(0, 0, rbg_state.get_current_player(), legal_moves, acc);
+    kx::radix_sort(legal_moves.begin(), legal_moves.end());
+    isLegalMovesProcessed = true;
+  }
+  return legal_moves.empty();
 }
 
 std::vector<double> Rbg2OpenSState::Returns() const {
@@ -171,6 +239,7 @@ void Rbg2OpenSState::ObservationTensor(Player player,
                                        std::vector<double>* values) const {
   SPIEL_CHECK_GE(player, 0);
   SPIEL_CHECK_LT(player, num_players_);
+
   // Treat `values` as a 2-d tensor.
   TensorView<2> view(values, {kCellStates, kNumCells}, true);
   for (int cell = 0; cell < kNumCells; ++cell) {

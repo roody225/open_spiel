@@ -21,36 +21,17 @@
 #include <string>
 #include <vector>
 
+#include "open_spiel/games/kxsort.h"
 #include "open_spiel/spiel.h"
 #include "open_spiel/games/rbg_game.hpp"
-
-// Simple game of Noughts and Crosses:
-// https://en.wikipedia.org/wiki/Tic-tac-toe
-//
-// Parameters: none
 
 namespace open_spiel {
 namespace rbg2opens {
 
-/*
-// Constants.
-inline constexpr int kNumPlayers = 2;
-inline constexpr int kNumRows = 3;
-inline constexpr int kNumCols = 3;
-inline constexpr int kNumCells = kNumRows * kNumCols;
-inline constexpr int kCellStates = 1 + kNumPlayers;  // empty, 'x', and 'o'.
-// https://math.stackexchange.com/questions/485752/tictactoe-state-space-choose-calculation/485852
-inline constexpr int kNumberStates = 5478;
-// State of a cell.
-enum class CellState {
-  kEmpty,
-  kNought,
-  kCross,
-};
-*/
 // State of an in-play game.
 Action rbg2opensAction(rbg_game::action_representation action);
 rbg_game::action_representation opens2rbgAction(Action action_id);
+int calculate_action_size();
 
 class Rbg2OpenSState : public State {
  public:
@@ -81,18 +62,25 @@ class Rbg2OpenSState : public State {
   mutable std::vector<rbg_game::semimove> rbg_moves;
   mutable std::vector<Action> legal_moves;
   mutable bool isLegalMovesProcessed = false;
-  int NUMBER_OF_POSSIBLE_MOVES = rbg_game::BOARD_SIZE * rbg_game::NUMBER_OF_MODIFIERS;
-  static std::vector<rbg_game::semimove> moves_map;
-  mutable std::vector<rbg_game::semimove> tmp;
+  int NUMBER_OF_POSSIBLE_ACTIONS = rbg_game::BOARD_SIZE * rbg_game::NUMBER_OF_MODIFIERS;
+  static const int MAX_ACTION_SIZE;
+  static const int SEMIMOVES_IN_MOVE;
+  static std::vector<std::vector<rbg_game::semimove>> semitmp;
+  mutable std::vector<rbg_game::semimove> acc;
+  //mutable std::vector<rbg_game::semimove> tmp0, tmp1, tmp2;
+  static std::vector<std::vector<rbg_game::semimove>> moves_map;
+  void calculate_legal_moves() const;
   const int KEEPER = 0;
   int num_moves_ = 0;
+  void gen_all_moves(int act, int nr, int plr, std::vector<Action>& legal_moves, std::vector<rbg_game::semimove>& acc) const;
 };
 
 // Game object.
 class Rbg2OpenSGame : public Game {
  public:
   explicit Rbg2OpenSGame(const GameParameters& params);
-  int NumDistinctActions() const override { return rbg_game::NUMBER_OF_MODIFIERS * rbg_game::BOARD_SIZE; }
+  //int NumDistinctActions() const override { return std::max(rbg_game::NUMBER_OF_MODIFIERS * rbg_game::BOARD_SIZE, (1<<23)); }
+  int NumDistinctActions() const override {return (1<<23); }
   std::unique_ptr<State> NewInitialState() const override {
     return std::unique_ptr<State>(new Rbg2OpenSState(shared_from_this()));
   }
