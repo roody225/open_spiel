@@ -110,8 +110,12 @@ std::string Rbg2OpenSState::ActionToString(Player player,
   return std::to_string(player) + " " +std::to_string(action_id);
 }
 
+std::vector<rbg_game::semimove> Rbg2OpenSState::moves_map;
+
 Rbg2OpenSState::Rbg2OpenSState(std::shared_ptr<const Game> game) : State(game) {
-  moves_map.resize(NUMBER_OF_POSSIBLE_MOVES, rbg_game::semimove({}, 0, 0));
+  rbg_game::semimove empty = rbg_game::semimove({}, 0, 0);
+  if(moves_map.size()==0)
+    moves_map.resize(NUMBER_OF_POSSIBLE_MOVES, empty);
   
   while(rbg_state.get_current_player() == KEEPER){
     if(!rbg_state.apply_any_move(rbg_cache)){
